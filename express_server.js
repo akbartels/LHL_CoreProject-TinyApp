@@ -9,6 +9,13 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const generateRandomString = function() {
+  const randomString = Math.random().toString(36).substring(6);
+  console.log(randomString);
+  return randomString;
+
+};
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
