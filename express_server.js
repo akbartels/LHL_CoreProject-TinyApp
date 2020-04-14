@@ -11,7 +11,7 @@ const urlDatabase = {
 
 const generateRandomString = function() {
   const randomString = Math.random().toString(36).substring(6);
-  return randomString;
+  return randomString; 
 };
 
 const bodyParser = require("body-parser");
