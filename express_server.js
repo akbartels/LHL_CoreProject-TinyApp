@@ -25,6 +25,16 @@ app.post("/urls", (req, res) => {
   console.log(urlDatabase);
 });
 
+app.post("/urls/:shortURL/delete", (req, res) => {
+ const shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL]) {
+    // console.log("Deleting", shortURL)
+    delete urlDatabase[shortURL];
+    // console.log(urlDatabase)
+    res.redirect("/urls");
+  }
+});
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
