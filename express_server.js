@@ -58,6 +58,12 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+app.get("/register", (req, res) => {
+  let templateVars = { username: req.cookies["username"], urls: urlDatabase };
+  
+  res.render('urls_register', templateVars);
+});
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
@@ -85,6 +91,10 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+app.use((req, res) => {
+  res.status(404).send(404)
 });
 
 app.listen(PORT, () => {
