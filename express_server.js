@@ -11,7 +11,7 @@ const urlDatabase = {
 
 const generateRandomString = function() {
   const randomString = Math.random().toString(36).substring(6);
-  return randomString; 
+  return randomString;
 };
 
 const bodyParser = require("body-parser");
@@ -25,20 +25,18 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
-  const newLongURL = req.body.newLongURL
+  const newLongURL = req.body.newLongURL;
   const shortURL = req.params.shortURL;
   if (urlDatabase[shortURL]) {
-    urlDatabase[shortURL] = newLongURL
-  } 
+    urlDatabase[shortURL] = newLongURL;
+  }
   res.redirect("/urls");
- });
+});
 
 app.post("/urls/:shortURL/delete", (req, res) => {
- const shortURL = req.params.shortURL;
+  const shortURL = req.params.shortURL;
   if (urlDatabase[shortURL]) {
-    // console.log("Deleting", shortURL)
     delete urlDatabase[shortURL];
-    // console.log(urlDatabase)
     res.redirect("/urls");
   }
 });
