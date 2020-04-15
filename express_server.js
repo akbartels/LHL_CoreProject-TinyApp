@@ -30,6 +30,15 @@ const generateRandomString = function() {
   return randomString;
 };
 
+const emailAlreadyExists = function(object, searchEmail) {
+  for (let key in object ) {
+    if (users[key].email === searchEmail) {
+      return true;
+    }
+  }
+  return false;
+};
+
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -60,17 +69,23 @@ app.post("/urls", (req, res) => {
 
 
 app.post("/register", (req, res) => {
-  // console.log(req.body)
-  const randomUserID = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+ 
+  if (!email || !password) {
+    res.status(400).send("You must enter an e-mail AND a password");
+  } else if (emailAlreadyExists(users, email)) {
+    res.status(400).send("The email you entered is already in use");
+  } else {
+  const randomUserID = generateRandomString();
   // console.log(randomUserID, email, password);
   users[randomUserID] = {id: randomUserID, email, password};
-  console.log(users);
+  
   res.cookie("email", email);
   res.cookie("password", password);
   res.cookie("id", randomUserID);
-  res.redirect("/urls")
+  res.redirect("/urls");
+  }
 });
 
 
@@ -153,5 +168,5 @@ app.use((req, res) => {
 
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!` + urlDatabase);
+  console.log(`Example app listening on port ${PORT}! \n${users}`);
 });
