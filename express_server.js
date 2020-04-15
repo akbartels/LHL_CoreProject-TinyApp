@@ -122,6 +122,14 @@ app.get("/register", (req, res) => {
 });
 
 
+app.get("/login", (req, res) => {
+  const users = req.cookies;
+  let templateVars = { users, urls: urlDatabase };
+  
+  res.render('urls_login', templateVars);
+});
+
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
