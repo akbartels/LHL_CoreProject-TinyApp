@@ -23,7 +23,6 @@
       </thead>
       <tbody>
         <% for(let url in urls) { %>
-         
           <tr>
             <td><%= url %></td>
             <td><%= urls[url] %></td>
@@ -33,10 +32,8 @@
             <td><form method="POST" action="/urls/<%= url %>/delete">
               <input class="btn btn-outline-danger" type="submit" value="Delete" name=<%= url %>></input>
             </form></td>
-            
           </tr>
         <% } %>
-        
       </tbody>
     </table>
   </main>
