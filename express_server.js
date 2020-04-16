@@ -29,7 +29,9 @@ const users = {
   }
 }
 
-// creates a random alphanumeric string 6 chars long
+// FUNCTIONS
+
+// alphanumeric, 6 chars long
 const generateRandomString = function() {
   const randomString = Math.random().toString(36).substring(6);
   return randomString;
@@ -43,6 +45,17 @@ const findEmailReturnUserID = function(object, searchEmail) {
   }
   return false;
 };
+
+const urlsForUser = function(loggedInID) {
+  let userURLs = {};
+
+  for (let shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === loggedInID.id) {
+      userURLs[shortURL] = urlDatabase[shortURL]; 
+    }
+  }
+  return userURLs;
+}
 
 
 const bodyParser = require("body-parser");
@@ -122,26 +135,26 @@ app.get("/u/:shortURL", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
-  //give me '123abc'
-  // need to get shortURL from somewhere.....?
   const user_id = req.cookies["user_id"];
   const loggedInUser = users[`${user_id}`];
-  // console.log("Logged in:", loggedInUser)
-  // console.log(user_id)
   
   if (!loggedInUser) {
     res.redirect("/login")
   };
 
-  let userURLs = {};
-  for (let shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === loggedInUser.id) {
-      // console.log("YAY!!!", loggedInUser.id, urlDatabase[shortURL].userID)
-      userURLs[shortURL] = urlDatabase[shortURL]; 
-    }
-  }
-  let templateVars = {usersObj: loggedInUser, userURLs };
+  let templateVars = {usersObj: loggedInUser, userURLs: urlsForUser(loggedInUser) };
   res.render('urls_index', templateVars);
+
+
+  // KEEP HERE UNTIL END JUST IN CASE FUNCTION DOESNT WORK PROPERLY. BELOW WORKED
+  // let userURLs = {};
+  // for (let shortURL in urlDatabase) {
+  //   if (urlDatabase[shortURL].userID === loggedInUser.id) {
+  //     console.log("YAY!!!", loggedInUser.id, urlDatabase[shortURL].userID)
+  //     userURLs[shortURL] = urlDatabase[shortURL]; 
+  //   }
+  // }
+  // let templateVars = {usersObj: loggedInUser, userURLs };
   
 });
 
@@ -174,7 +187,6 @@ app.get("/urls/new", (req, res) => {
     res.render("urls_new", templateVars)
   }
 
-  // console.log(templateVars)
   
 });
 
@@ -189,23 +201,40 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 
-app.post("/urls/:shortURL/edit", (req, res) => { // NEED REVIEW
+app.post("/urls/:shortURL/edit", (req, res) => { 
   const newLongURL = req.body.newLongURL;
   const shortURL = req.params.shortURL;
-  if (urlDatabase[shortURL]) {
+  const user_id = req.cookies["user_id"];
+  const loggedInUser = users[`${user_id}`];
+  
+  if (!loggedInUser) {
+    res.status(403).send("You do not have permission to edit/delet this URL")
+  } else if (urlDatabase[shortURL] && urlDatabase[shortURL].userID === loggedInUser.id) {
     urlDatabase[shortURL].longURL = newLongURL;
+    res.redirect("/urls");
+  } else {
+    res.status(403).send("You do not have permission to edit/delet this URL")
   }
-  res.redirect("/urls");
+  
+
+  
 });
 
 
-app.post("/urls/:shortURL/delete", (req, res) => { // NEED REVIEW
+app.post("/urls/:shortURL/delete", (req, res) => { 
   const shortURL = req.params.shortURL;
-  if (urlDatabase[shortURL]) {
+  const user_id = req.cookies["user_id"];
+  const loggedInUser = users[`${user_id}`];
+
+  if (!loggedInUser) {
+    res.status(403).send("You do not have permission to edit/delet this URL")
+  } else if (urlDatabase[shortURL] && urlDatabase[shortURL].userID === loggedInUser.id) {
     delete urlDatabase[shortURL];
     res.redirect("/urls");
-    console.longURL
+  } else {
+    res.status(403).send("You do not have permission to edit/delet this URL")
   }
+
 });
 
 
