@@ -44,29 +44,13 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 
-app.post("/login", (req, res) => {
-  console.log(req.body)
-  const email = req.body.email;
-  res.cookie("email", email);
-  res.redirect("/urls");
-});
-
-
-app.post("/logout", (req, res) => {
-  res.clearCookie("email");
-  res.clearCookie("password");
-  res.clearCookie("id");
-  res.redirect("/urls");
-});
-
-
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+// REGISTER/LOG IN/OUT ROUTES
+app.get("/register", (req, res) => {
+  const users = req.cookies;
+  let templateVars = { users, urls: urlDatabase };
   
-  res.redirect(`/urls/${shortURL}`);
+  res.render('urls_register', templateVars);
 });
-
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
@@ -89,39 +73,6 @@ app.post("/register", (req, res) => {
 });
 
 
-app.post("/urls/:shortURL/edit", (req, res) => {
-  const newLongURL = req.body.newLongURL;
-  const shortURL = req.params.shortURL;
-  if (urlDatabase[shortURL]) {
-    urlDatabase[shortURL] = newLongURL;
-  }
-  res.redirect("/urls");
-});
-
-
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const shortURL = req.params.shortURL;
-  if (urlDatabase[shortURL]) {
-    delete urlDatabase[shortURL];
-    res.redirect("/urls");
-  }
-});
-
-
-
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-
-app.get("/register", (req, res) => {
-  const users = req.cookies;
-  let templateVars = { users, urls: urlDatabase };
-  
-  res.render('urls_register', templateVars);
-});
-
-
 app.get("/login", (req, res) => {
   const users = req.cookies;
   let templateVars = { users, urls: urlDatabase };
@@ -130,8 +81,42 @@ app.get("/login", (req, res) => {
 });
 
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+app.post("/login", (req, res) => {
+  console.log(req.body);
+  const email = req.body.email;
+  const passwordEntered = req.body.password;
+
+  if (!emailAlreadyExists(email)) {
+    res.status(403).send("Cannot find email");
+  } else if (emailAlreadyExists(email) && emailAlreadyExists(email).    password !== passwordEntered) {
+    res.status(403).send("Password does not match");
+  } else {
+    res.cookie("email", email);
+    res.redirect("/urls");
+  }
+});
+
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("email");
+  res.clearCookie("password");
+  res.clearCookie("id");
+  res.redirect("/urls");
+});
+
+
+
+
+// MAIN USER ROUTES
+
+app.get("/", (req, res) => {
+  res.send("Hello!");
+});
+
+
+app.get("/u/:shortURL", (req, res) => {
+  let longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 });
 
 
@@ -139,6 +124,19 @@ app.get("/urls", (req, res) => {
   const users = req.cookies;
   let templateVars = { users, urls: urlDatabase };
   res.render('urls_index', templateVars);
+});
+
+
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  
+  res.redirect(`/urls/${shortURL}`);
+});
+
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
 });
 
 
@@ -159,14 +157,22 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 
-app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+app.post("/urls/:shortURL/edit", (req, res) => {
+  const newLongURL = req.body.newLongURL;
+  const shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL]) {
+    urlDatabase[shortURL] = newLongURL;
+  }
+  res.redirect("/urls");
 });
 
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL]) {
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");
+  }
 });
 
 
