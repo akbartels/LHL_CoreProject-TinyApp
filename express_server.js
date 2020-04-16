@@ -30,10 +30,10 @@ const generateRandomString = function() {
   return randomString;
 };
 
-const emailAlreadyExists = function(object, searchEmail) {
+const findEmailReturnUserID = function(object, searchEmail) {
   for (let key in object ) {
     if (users[key].email === searchEmail) {
-      return true;
+      return key;
     }
   }
   return false;
@@ -45,35 +45,34 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 
 // REGISTER/LOG IN/OUT ROUTES
-app.get("/register", (req, res) => {
-  const users = req.cookies;
-  let templateVars = { users, urls: urlDatabase };
+app.get("/register", (req, res) => { // QUESTION PENDING
+  
+  const user_id = req.cookies;
+  let templateVars = {user: user_id, urls: urlDatabase }; // is this needed here???
   
   res.render('urls_register', templateVars);
 });
 
-app.post("/register", (req, res) => {
+app.post("/register", (req, res) => { // REVIEWED
   const email = req.body.email;
   const password = req.body.password;
  
   if (!email || !password) {
     res.status(400).send("You must enter an e-mail AND a password");
-  } else if (emailAlreadyExists(users, email)) {
+  } else if (findEmailReturnUserID(users, email)) {
     res.status(400).send("The email you entered is already in use");
   } else {
   const randomUserID = generateRandomString();
   // console.log(randomUserID, email, password);
   users[randomUserID] = {id: randomUserID, email, password};
-  
-  res.cookie("email", email);
-  res.cookie("password", password);
-  res.cookie("id", randomUserID);
+  res.cookie("user_id", randomUserID);
   res.redirect("/urls");
   }
 });
 
 
 app.get("/login", (req, res) => {
+  console.log(req.cookies)
   const users = req.cookies;
   let templateVars = { users, urls: urlDatabase };
   
@@ -82,25 +81,23 @@ app.get("/login", (req, res) => {
 
 
 app.post("/login", (req, res) => {
-  console.log(req.body);
+  console.log(req.body)
   const email = req.body.email;
   const passwordEntered = req.body.password;
 
-  if (!emailAlreadyExists(email)) {
+  if (!findEmailReturnUserID(users, email)) {
     res.status(403).send("Cannot find email");
-  } else if (emailAlreadyExists(email) && emailAlreadyExists(email).    password !== passwordEntered) {
+  } else if (users[findEmailReturnUserID(users, email)].password !== passwordEntered) { 
     res.status(403).send("Password does not match");
   } else {
-    res.cookie("email", email);
+    res.cookie("user_id", findEmailReturnUserID(users, email));
     res.redirect("/urls");
   }
 });
 
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("email");
-  res.clearCookie("password");
-  res.clearCookie("id");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
@@ -121,8 +118,12 @@ app.get("/u/:shortURL", (req, res) => {
 
 
 app.get("/urls", (req, res) => {
-  const users = req.cookies;
-  let templateVars = { users, urls: urlDatabase };
+  const user_id = req.cookies["user_id"];
+  
+
+  let templateVars = {usersObj: users[`${user_id}`] , urls: urlDatabase };
+
+  console.log(templateVars)
   res.render('urls_index', templateVars);
 });
 
@@ -141,8 +142,8 @@ app.get("/urls.json", (req, res) => {
 
 
 app.get("/urls/new", (req, res) => {
-  const users = req.cookies;
-  let templateVars = { users, urls: urlDatabase };
+  const user_id = req.cookies["user_id"]
+  let templateVars = { usersObj: users[`${user_id}`], urls: urlDatabase };
 
   console.log(templateVars)
   res.render("urls_new", templateVars);
@@ -150,9 +151,9 @@ app.get("/urls/new", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const users = req.cookies;
+  const user_id = req.cookies["user_id"]
   let shortURL = req.params.shortURL;
-  let templateVars = { users, shortURL: shortURL, longURL: urlDatabase[shortURL]};
+  let templateVars = { usersObj: users[`${user_id}`], shortURL: shortURL, longURL: urlDatabase[shortURL]};
   res.render('urls_show', templateVars);
 });
 

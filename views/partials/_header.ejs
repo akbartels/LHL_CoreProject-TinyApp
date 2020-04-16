@@ -12,9 +12,9 @@
         <a class="nav-item nav-link" href="/login">Log In</a>
       </div>
     </div>
-    <%if (users.id) { %>
+    <%if (typeof usersObj === 'object') { %>
       <div style="margin: 15px">
-        <b>Logged in as: <%= users.email %></b>
+        <b>Logged in as: <%= usersObj.email %></b>
       </div>
       <form class="form-inline" action="/logout" method="POST">
         <div class="form-group mb-2">
