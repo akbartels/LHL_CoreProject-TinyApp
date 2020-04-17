@@ -13,6 +13,7 @@ const generateRandomString = function() {
   return randomString;
 };
 
+
 const getUserIdByEmail = function(database, searchEmail) {
   for (let user in database) {
     if (users[user].email === searchEmail) {
@@ -33,6 +34,8 @@ const urlsForUser = function(loggedInID, databaseUrls) {
   }
   return userURLs;
 };
+
+
 
 module.exports = {
   generateRandomString,

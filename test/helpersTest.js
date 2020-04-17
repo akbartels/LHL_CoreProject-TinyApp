@@ -6,7 +6,6 @@ const {
 
 const { assert } = require('chai');
 
-// const { getUserIdByEmail } = require('../helpers.js');
 
 const testUsers = {
   "userRandomID": {
@@ -30,19 +29,16 @@ describe('getUserIdByEmail', function() {
   it('should return a user with valid email', function() {
     const user = getUserIdByEmail(testUsers, "user@example.com");
     const expectedOutput = "userRandomID";
-    // Write your assert statement here
     assert.equal(user, expectedOutput);
   });
   it('should return undefined if email does not exist in database', function() {
     const user = getUserIdByEmail(testUsers, "notthere@example.com");
     const expectedOutput = undefined;
-    // Write your assert statement here
     assert.equal(user, expectedOutput);
   });
   it('should return undefined if email is not passed in', function() {
     const user = getUserIdByEmail(testUsers, "");
     const expectedOutput = undefined;
-    // Write your assert statement here
     assert.equal(user, expectedOutput);
   });
 });
@@ -56,13 +52,11 @@ describe('urlsForUser', function() {
       'b2xVn2': { longURL: 'http://www.lighthouselabs.ca', userID: 'userRandomID' },
       '9sm5xK': { longURL: 'http://www.google.com', userID: 'userRandomID' }
     };
-    // Write your assert statement here
     assert.deepEqual(userURLs, expectedOutput);
   });
   it('should return an empty object if a user has not created any urls', function() {
     const userURLs = urlsForUser(testUsers.user2RandomID.id, urlDatabaseTest);
     const expectedOutput = {};
-    // Write your assert statement here
     assert.deepEqual(userURLs, expectedOutput);
   });
   

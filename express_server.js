@@ -1,3 +1,15 @@
+
+//////////////////////////////////
+// ** TINY APP EXPRESS SERVER **//
+//////////////////////////////////
+
+const PORT = 8080;
+
+
+/////////////
+// MODULES //
+/////////////
+
 const express = require("express");
 const app = express();
 const {
@@ -11,8 +23,11 @@ const {
   urlsForUser
 } = require("./helpers");
 
-// const cookieParser = require('cookie-parser');
-// app.use(cookieParser());
+
+
+/////////////////////
+// PACKAGES & APIs //
+/////////////////////
 
 const cookieSession = require('cookie-session');
 
@@ -29,22 +44,18 @@ app.set('view engine', 'ejs');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
-const PORT = 8080; // default port 8080
-
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 
 
+////////////////////////////////
+// REGISTER/LOG IN/OUT ROUTES //
+////////////////////////////////
 
-// REGISTER/LOG IN/OUT ROUTES
-app.get("/register", (req, res) => { // QUESTION PENDING
-  
-  // const userIdCookie = req.cookies;
+app.get("/register", (req, res) => { 
   const userIdCookie = req.session.userIdCookie;
-
-  let templateVars = {user: userIdCookie, urls: urlDatabase }; // is this needed here???
-  
+  let templateVars = {user: userIdCookie, urls: urlDatabase };
   res.render('urls_register', templateVars);
 });
 
@@ -59,24 +70,18 @@ app.post("/register", (req, res) => {
     res.status(400).send("The email you entered is already in use");
   } else {
     const randomUserID = generateRandomString();
-    // console.log(randomUserID, email, password);
     users[randomUserID] = {id: randomUserID, email, hashedPassword};
     console.log(users);
-    // res.cookie("userIdCookie", randomUserID);
     req.session.userIdCookie = randomUserID;
     res.redirect("/urls");
   }
 });
 
-
 app.get("/login", (req, res) => {
-  // const users = req.cookies;
   const userIdCookie = req.session.userIdCookie;
   let templateVars = { users, urls: urlDatabase };
-  
   res.render('urls_login', templateVars);
 });
-
 
 app.post("/login", (req, res) => {
   const enteredEmail = req.body.email;
@@ -92,17 +97,14 @@ app.post("/login", (req, res) => {
   const passwordCorrect = bcrypt.compareSync(passwordEntered, usersHashedPassword);
   
   if (passwordCorrect) {
-    req.session.userIdCookie = getUserIdByEmail(users, enteredEmail); //*****//
+    req.session.userIdCookie = getUserIdByEmail(users, enteredEmail);
     res.redirect("/urls");
   } else {
     res.status(403).send("The password you entered is not correct");
   }
-
 });
 
-
 app.post("/logout", (req, res) => {
-  // res.clearCookie("userIdCookie"); //*****/
   req.session = null;
   res.redirect("/login");
 });
@@ -110,67 +112,44 @@ app.post("/logout", (req, res) => {
 
 
 
-// MAIN USER ROUTES
-
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
+//////////////////////
+// MAIN USER ROUTES //
+//////////////////////
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL;
-  res.redirect(longURL);
+  if (!urlDatabase[shortURL]) {
+    res.status(404).send("Page not found");
+  } else {
+    const longURL = urlDatabase[shortURL].longURL;
+    res.redirect(longURL);
+  }
 });
 
-
 app.get("/urls", (req, res) => {
-  // const userIdCookie = req.cookies["userIdCookie"];
   const userIdCookie = req.session.userIdCookie;
   const loggedInUser = users[`${userIdCookie}`];
   
   if (!loggedInUser) {
     res.redirect("/login");
+  } else {
+    let templateVars = {usersObj: loggedInUser, userURLs: urlsForUser(loggedInUser.id, urlDatabase) };
+    res.render('urls_index', templateVars);
   }
-
-  let templateVars = {usersObj: loggedInUser, userURLs: urlsForUser(loggedInUser.id, urlDatabase) };
-  res.render('urls_index', templateVars);
-
-
-  // KEEP HERE UNTIL END JUST IN CASE FUNCTION DOESNT WORK PROPERLY. BELOW WORKED
-  // let userURLs = {};
-  // for (let shortURL in urlDatabase) {
-  //   if (urlDatabase[shortURL].userID === loggedInUser.id) {
-  //     console.log("YAY!!!", loggedInUser.id, urlDatabase[shortURL].userID)
-  //     userURLs[shortURL] = urlDatabase[shortURL];
-  //   }
-  // }
-  // let templateVars = {usersObj: loggedInUser, userURLs };
-  
 });
-
 
 app.post("/urls", (req, res) => {
-//  console.log(urlDatabase)
-  // console.log(req.body)
-  // console.log(req.cookies)
   const shortURL = generateRandomString();
-  
   urlDatabase[shortURL] = {longURL: `${req.body.longURL}`, userID: `${req.session.userIdCookie}`};
-  // console.log(urlDatabase[shortURL])
-  
+
   res.redirect(`/urls/${shortURL}`);
 });
-
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-
 app.get("/urls/new", (req, res) => {
-  
-  // const userIdCookie = req.cookies["userIdCookie"]
   const userIdCookie = req.session.userIdCookie;
   let templateVars = { usersObj: users[`${userIdCookie}`], urls: urlDatabase };
   if (!userIdCookie) {
@@ -180,22 +159,22 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-
 app.get("/urls/:shortURL", (req, res) => {
-  // const userIdCookie = req.cookies["userIdCookie"]
-  const userIdCookie = req.session.userIdCookie;
   const shortURL = req.params.shortURL;
+  if (!urlDatabase[shortURL]) {
+    res.status(404).send("Page not found");
+  }
+  
+  const userIdCookie = req.session.userIdCookie;
   const longURL = urlDatabase[shortURL].longURL;
 
   let templateVars = { usersObj: users[`${userIdCookie}`], shortURL, longURL};
   res.render('urls_show', templateVars);
 });
 
-
 app.post("/urls/:shortURL/edit", (req, res) => {
   const newLongURL = req.body.newLongURL;
   const shortURL = req.params.shortURL;
-  // const userIdCookie = req.cookies["userIdCookie"];
   const userIdCookie = req.session.userIdCookie;
   const loggedInUser = users[`${userIdCookie}`];
   
@@ -209,10 +188,8 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   }
 });
 
-
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
-  // const userIdCookie = req.cookies["userIdCookie"];
   const userIdCookie = req.session.userIdCookie;
   const loggedInUser = users[`${userIdCookie}`];
 
@@ -224,14 +201,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   } else {
     res.status(403).send("You do not have permission to edit/delet this URL");
   }
-
 });
-
 
 app.use((req, res) => {
   res.status(404).send(404);
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
