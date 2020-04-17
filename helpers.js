@@ -19,15 +19,16 @@ const getUserIdByEmail = function(database, searchEmail) {
       return user;
     }
   }
-  return false;
+  return undefined;
 };
 
-const urlsForUser = function(loggedInID) {
+
+const urlsForUser = function(loggedInID, databaseUrls) {
   let userURLs = {};
 
-  for (let shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === loggedInID.id) {
-      userURLs[shortURL] = urlDatabase[shortURL];
+  for (let shortURL in databaseUrls) {
+    if (databaseUrls[shortURL].userID === loggedInID) {
+      userURLs[shortURL] = databaseUrls[shortURL];
     }
   }
   return userURLs;

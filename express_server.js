@@ -133,7 +133,7 @@ app.get("/urls", (req, res) => {
     res.redirect("/login");
   }
 
-  let templateVars = {usersObj: loggedInUser, userURLs: urlsForUser(loggedInUser) };
+  let templateVars = {usersObj: loggedInUser, userURLs: urlsForUser(loggedInUser.id, urlDatabase) };
   res.render('urls_index', templateVars);
 
 
@@ -178,8 +178,6 @@ app.get("/urls/new", (req, res) => {
   } else {
     res.render("urls_new", templateVars);
   }
-
-  
 });
 
 
