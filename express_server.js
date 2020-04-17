@@ -1,10 +1,17 @@
 const express = require("express");
-const cookieParser = require('cookie-parser');
 const app = express();
-const PORT = 8080; // default port 8080
 
+const cookieParser = require('cookie-parser');
 app.set('view engine', 'ejs');
 app.use(cookieParser());
+
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+const PORT = 8080; // default port 8080
+
+
+//DATABASE
 
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "123abc"},
@@ -15,19 +22,15 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    hashedPassword: "purple-monkey-dinosaur"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
-  },
-  "123abc": {
-    id: "123abc",
-    email: "akunrau@gmail.com",
-    password: "123"
+    hashedPassword: "dishwasher-funk"
   }
 }
+
 
 // FUNCTIONS
 
@@ -71,18 +74,20 @@ app.get("/register", (req, res) => { // QUESTION PENDING
   res.render('urls_register', templateVars);
 });
 
-app.post("/register", (req, res) => { // REVIEWED
+app.post("/register", (req, res) => { 
   const email = req.body.email;
-  const password = req.body.password;
+  const plainTextPassword = req.body.password;
+  const hashedPassword = bcrypt.hashSync(plainTextPassword, saltRounds)
  
-  if (!email || !password) {
+  if (!email || !plainTextPassword) {
     res.status(400).send("You must enter an e-mail AND a password");
   } else if (findEmailReturnUserID(users, email)) {
     res.status(400).send("The email you entered is already in use");
   } else {
   const randomUserID = generateRandomString();
   // console.log(randomUserID, email, password);
-  users[randomUserID] = {id: randomUserID, email, password};
+  users[randomUserID] = {id: randomUserID, email, hashedPassword};
+  console.log(users)
   res.cookie("user_id", randomUserID);
   res.redirect("/urls");
   }
@@ -98,17 +103,25 @@ app.get("/login", (req, res) => {
 
 
 app.post("/login", (req, res) => {
-  const email = req.body.email;
+  const enteredEmail = req.body.email;
   const passwordEntered = req.body.password;
-
-  if (!findEmailReturnUserID(users, email)) {
+  
+  if (!findEmailReturnUserID(users, enteredEmail)) {
     res.status(403).send("Cannot find email");
-  } else if (users[findEmailReturnUserID(users, email)].password !== passwordEntered) { 
-    res.status(403).send("Password does not match");
-  } else {
-    res.cookie("user_id", findEmailReturnUserID(users, email));
-    res.redirect("/urls");
+  } else if (!passwordEntered) { 
+    res.status(403).send("You need to enter a password");
   }
+  
+  const usersHashedPassword = users[findEmailReturnUserID(users, enteredEmail)].hashedPassword;
+  const passwordCorrect = bcrypt.compareSync(passwordEntered, usersHashedPassword )
+  
+  if (passwordCorrect) {
+    res.cookie("user_id", findEmailReturnUserID(users, enteredEmail));
+    res.redirect("/urls");
+  } else {
+    res.status(403).send("The password you entered is not correct");
+  }
+
 });
 
 
@@ -215,9 +228,6 @@ app.post("/urls/:shortURL/edit", (req, res) => {
   } else {
     res.status(403).send("You do not have permission to edit/delet this URL")
   }
-  
-
-  
 });
 
 
