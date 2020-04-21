@@ -71,7 +71,6 @@ app.post("/register", (req, res) => {
   } else {
     const randomUserID = generateRandomString();
     users[randomUserID] = {id: randomUserID, email, hashedPassword};
-    console.log(users);
     req.session.userIdCookie = randomUserID;
     res.redirect("/urls");
   }
@@ -161,15 +160,19 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
+  const userIdCookie = req.session.userIdCookie;
   if (!urlDatabase[shortURL]) {
     res.status(404).send("Page not found");
   }
-  
-  const userIdCookie = req.session.userIdCookie;
-  const longURL = urlDatabase[shortURL].longURL;
 
-  let templateVars = { usersObj: users[`${userIdCookie}`], shortURL, longURL};
-  res.render('urls_show', templateVars);
+  if (!userIdCookie) {
+    res.redirect("/login");
+  } else {
+    const longURL = urlDatabase[shortURL].longURL;
+
+    let templateVars = { usersObj: users[`${userIdCookie}`], shortURL, longURL};
+    res.render('urls_show', templateVars);
+  }
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
